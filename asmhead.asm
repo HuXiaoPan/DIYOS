@@ -5,27 +5,27 @@ BOTPAK	EQU		0x00280000		; bootpack�̃��[�h��
 DSKCAC	EQU		0x00100000		; �f�B�X�N�L���b�V���̏ꏊ
 DSKCAC0	EQU		0x00008000		; �f�B�X�N�L���b�V���̏ꏊ�i���A�����[�h�j
 
-; BOOT_INFO�֌W
-CYLS	EQU		0x0ff0			; �u�[�g�Z�N�^���ݒ肷��
+; 有关BOOT_INFO
+CYLS	EQU		0x0ff0			; 设定启动区
 LEDS	EQU		0x0ff1
-VMODE	EQU		0x0ff2			; �F���Ɋւ�����B���r�b�g�J���[���H
-SCRNX	EQU		0x0ff4			; �𑜓x��X
-SCRNY	EQU		0x0ff6			; �𑜓x��Y
-VRAM	EQU		0x0ff8			; �O���t�B�b�N�o�b�t�@�̊J�n�Ԓn
+VMODE	EQU		0x0ff2			; 颜色的位数
+SCRNX	EQU		0x0ff4			; 分辨率X
+SCRNY	EQU		0x0ff6			; 分辨率Y
+VRAM	EQU		0x0ff8			; 图像缓冲区的开始位置
 
-; 		ORG		0xc200			; ���̃v���O�������ǂ��ɓǂݍ��܂��̂�
+		ORG		0xc200			; 汇编程序偏移
 
-; ��ʃ��[�h��ݒ�
+; 显示设置
 
-		MOV		AL,0x13			; VGA�O���t�B�b�N�X�A320x200x8bit�J���[
+		MOV		AL,0x13			; VGA显卡,320*200*8位颜色
 		MOV		AH,0x00
 		INT		0x10
-		MOV		BYTE [VMODE],8	; ��ʃ��[�h����������iC���ꂪ�Q�Ƃ���j
+		MOV		BYTE [VMODE],8	; 保存显示器状态
 		MOV		WORD [SCRNX],320
 		MOV		WORD [SCRNY],200
 		MOV		DWORD [VRAM],0x000a0000
 
-; �L�[�{�[�h��LED��Ԃ�BIOS�ɋ����Ă��炤
+; 取得键盘指示灯状态
 
 		MOV		AH,0x02
 		INT		0x16 			; keyboard BIOS
@@ -41,7 +41,7 @@ VRAM	EQU		0x0ff8			; �O���t�B�b�N�o�b�t�@�̊J�n�Ԓn
 		NOP						; OUT���߂�A��������Ƃ��܂������Ȃ��@�킪����炵���̂�
 		OUT		0xa1,AL
 
-		CLI						; �����CPU���x���ł����荞�݋֎~
+		CLI						; 禁止中断发生
 
 ; CPU����1MB�ȏ�̃������ɃA�N�Z�X�ł���悤�ɁAA20GATE��ݒ�
 
@@ -62,7 +62,7 @@ VRAM	EQU		0x0ff8			; �O���t�B�b�N�o�b�t�@�̊J�n�Ԓn
 		AND		EAX,0x7fffffff	; bit31��0�ɂ���i�y�[�W���O�֎~�̂��߁j
 		OR		EAX,0x00000001	; bit0��1�ɂ���i�v���e�N�g���[�h�ڍs�̂��߁j
 		MOV		CR0,EAX
-		JMP		pipelineflush
+		JMP		SHORT pipelineflush
 pipelineflush:
 		MOV		AX,1*8			;  �ǂݏ����\�Z�O�����g32bit
 		MOV		DS,AX
@@ -113,7 +113,7 @@ pipelineflush:
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	; �X�^�b�N�����l
-		JMP		DWORD 2*8:0x0000001b
+		JMP		DWORD 2*8:0x00000014
 
 waitkbdout:
 		IN		 AL,0x64
@@ -131,9 +131,9 @@ memcpy:
 		RET
 ; memcpy�̓A�h���X�T�C�Y�v���t�B�N�X�����Y��Ȃ���΁A�X�g�����O���߂ł�������
 
-		ALIGNB	16
+		ALIGN 16, DB 0
 GDT0:
-		RESB	8				; �k���Z���N�^
+		TIMES 8	DB 0			; �k���Z���N�^
 		DW		0xffff,0x0000,0x9200,0x00cf	; �ǂݏ����\�Z�O�����g32bit
 		DW		0xffff,0x0000,0x9a28,0x0047	; ���s�\�Z�O�����g32bit�ibootpack�p�j
 
@@ -142,5 +142,8 @@ GDTR0:
 		DW		8*3-1
 		DD		GDT0
 
-		ALIGNB	16
+		ALIGN 16, DB 0
 bootpack:
+		DW 		0x0000,0x0031,0x0000,0x0000,0x0000,0x0000,0x0000,0x0031
+		DW 		0x0000,0x0000
+

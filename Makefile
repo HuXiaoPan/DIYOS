@@ -13,16 +13,22 @@ default :
 img : hptOS.img
 	$(MAKE) hptOS.img
 
-hptOS.sys: kernel.tmp
-	objcopy -O binary -j .text $(TEMPPATH)kernel.tmp $(TEMPPATH)hptOS.sys
+hptOS.sys: asmhead.bin kernel.bin
+	cmd /c copy /b .\temp\asmhead.bin+.\temp\kernel.bin .\temp\hptOS.sys
 
-kernel.tmp: asmhead.obj bootpack.obj asmfunc.obj
-	if not exist temp md temp
-	ld -m i386pe -T NUL -o $(TEMPPATH)kernel.tmp -Ttext 0xc200 $(TEMPPATH)asmhead.obj $(TEMPPATH)bootpack.obj $(TEMPPATH)asmfunc.obj
+# powershell gc -Encoding Byte $(TEMPPATH)asmhead.bin,$(TEMPPATH)kernel.bin | powershell sc -Encoding Byte hptOS.sys
 
-asmhead.obj: asmhead.asm
+kernel.bin: kernel.tmp
 	if not exist temp md temp
-	$(NASM) -felf32 .\asmhead.asm -o $(TEMPPATH)asmhead.obj
+	objcopy -O binary -j .text $(TEMPPATH)kernel.tmp $(TEMPPATH)kernel.bin
+
+kernel.tmp: bootpack.obj asmfunc.obj
+	if not exist temp md temp
+	ld -m i386pe -T NUL -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootpack.obj $(TEMPPATH)asmfunc.obj
+
+asmhead.bin: asmhead.asm
+	if not exist temp md temp
+	$(NASM) -f bin .\asmhead.asm -o $(TEMPPATH)asmhead.bin -l $(TEMPPATH)asmhead.lst
 
 bootpack.obj: bootpack.c
 	if not exist temp md temp
@@ -30,7 +36,7 @@ bootpack.obj: bootpack.c
 
 asmfunc.obj: asmfunc.asm
 	if not exist temp md temp
-	$(NASM) -felf32 .\asmfunc.asm -o $(TEMPPATH)asmfunc.obj
+	$(NASM) -f win32 .\asmfunc.asm -o $(TEMPPATH)asmfunc.obj -l $(TEMPPATH)asmfunc.lst
 
 # initial program loader
 ipl.bin : ipl.nas
@@ -54,3 +60,5 @@ clean :
 	-$(DEL) *.lst
 	-$(DEL) *.sys
 	-$(DEL) *.img
+	-$(DEL) *.tmp
+	-$(DEL) *.obj
