@@ -20,15 +20,19 @@ hptOS.sys: asmhead.bin kernel.bin
 
 kernel.bin: kernel.tmp
 	if not exist temp md temp
-	objcopy -O binary -j .text $(TEMPPATH)kernel.tmp $(TEMPPATH)kernel.bin
+	objcopy -O binary -j .data -j .text $(TEMPPATH)kernel.tmp $(TEMPPATH)kernel.bin
 
-kernel.tmp: bootpack.obj asmfunc.obj
+kernel.tmp: bootEntry.obj bootpack.obj asmfunc.obj
 	if not exist temp md temp
-	ld -m i386pe -T NUL -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootpack.obj $(TEMPPATH)asmfunc.obj
+	ld -m i386pe -e _entry -T NUL -Ttext=0x280000 -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootEntry.obj $(TEMPPATH)bootpack.obj $(TEMPPATH)asmfunc.obj
 
 asmhead.bin: asmhead.asm
 	if not exist temp md temp
-	$(NASM) -f bin .\asmhead.asm -o $(TEMPPATH)asmhead.bin -l $(TEMPPATH)asmhead.lst
+	$(NASM) -f bin asmhead.asm -o $(TEMPPATH)asmhead.bin -l $(TEMPPATH)asmhead.lst
+
+bootEntry.obj: bootEntry.asm
+	if not exist temp md temp
+	$(NASM) -f win32 bootEntry.asm -o $(TEMPPATH)bootEntry.obj -l $(TEMPPATH)bootEntry.lst
 
 bootpack.obj: bootpack.c
 	if not exist temp md temp
@@ -36,7 +40,7 @@ bootpack.obj: bootpack.c
 
 asmfunc.obj: asmfunc.asm
 	if not exist temp md temp
-	$(NASM) -f win32 .\asmfunc.asm -o $(TEMPPATH)asmfunc.obj -l $(TEMPPATH)asmfunc.lst
+	$(NASM) -f win32 asmfunc.asm -o $(TEMPPATH)asmfunc.obj -l $(TEMPPATH)asmfunc.lst
 
 # initial program loader
 ipl.bin : ipl.nas

@@ -5,11 +5,13 @@ void io_out8(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 
+extern void _main(void);
+
 /* 就算写在一个源文件里，如果想要定义前使用，还是要事先声明一下 */
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
-void HariMain(void)
+void _main(void)
 {
 	int i;
 	// char *p;
@@ -29,8 +31,8 @@ void HariMain(void)
 
 void init_palette(void)
 {
-	// 编译问题暂时用不了静态数据,先用动态数据
-	unsigned char table_rgb[16 * 3] = {
+	// 已经解决静态数据问题
+	static unsigned char table_rgb[16 * 3] = {
 		0x00, 0x00, 0x00,	/*  0:黑 		*/
 		0xff, 0x00, 0x00,	/*  1:亮红 		*/
 		0x00, 0xff, 0x00,	/*  2:亮绿 		*/
