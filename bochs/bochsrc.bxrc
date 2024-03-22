@@ -1,0 +1,147 @@
+# 指定虚拟机的内存大小为2048M
+# 看到sample配置文件中，讲到“MEGS”选项已弃用。请改用“MEMORY”选项。自行决定。
+#memory:2048
+megs:2048
+
+# 指定虚拟机的BIOS镜像
+romimage: file=BIOS-bochs-latest
+vgaromimage: file=VGABIOS-lgpl-latest
+
+# 软盘启动及配置（1_44为大小，支持的大小有：
+#   2_88 ： 2.88MB 3.5 介质
+#   1_44 ： 1.44MB 3.5 介质
+#   1_2 ： 1.2MB  5.25 介质
+#   720k ： 720KB  3.5 介质
+#   360k ： 360KB  5.25 介质
+#   320k ： 320KB  5.25 介质
+#   180k ： 180KB  5.25 介质
+#   160k ： 160KB  5.25 介质
+# ）
+floppya: 1_44=..\hptOS.img, status=inserted
+boot: floppy
+
+# 指定日志文件，里面有各种运行时信息（可以不指定）
+log: bochsout.txt
+
+# 不使用鼠标（使用则设为1，尽量不使用）
+mouse: enabled=0
+
+# 这定义了Bochs内部与cpu相关的参数：
+#
+# model：
+# 从预定义的所有列表中选择要模拟的CPU配置
+#
+# 可以选择的CPU配置：
+#  pentium                    Intel Pentium (P54C)
+#  pentium_mmx                Intel Pentium MMX
+#  amd_k6_2_chomper           AMD-K6(tm) 3D processor (Chomper)
+#  p2_klamath                 Intel Pentium II (Klamath)
+#  p3_katmai                  Intel Pentium III (Katmai)
+#  p4_willamette              Intel(R) Pentium(R) 4 (Willamette)
+#  core_duo_t2400_yonah       Intel(R) Core(TM) Duo CPU T2400 (Yonah)
+#  atom_n270                  Intel(R) Atom(TM) CPU N270
+#  p4_prescott_celeron_336    Intel(R) Celeron(R) 336 (Prescott)
+#  athlon64_clawhammer        AMD Athlon(tm) 64 Processor 2800+ (Clawhammer)
+#  athlon64_venice            AMD Athlon(tm) 64 Processor 3000+ (Venice)
+#  turion64_tyler             AMD Turion(tm) 64 X2 Mobile TL-60 (Tyler)
+#  phenom_8650_toliman        AMD Phenom X3 8650 (Toliman)
+#  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600 (Penryn)
+#  corei5_lynnfield_750       Intel(R) Core(TM) i5   750 (Lynnfield)
+#  corei5_arrandale_m520      Intel(R) Core(TM) i5 M 520 (Arrandale)
+#  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
+#  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
+#  trinity_apu                AMD A8-5600K APU (Trinity)
+#  ryzen                      AMD Ryzen 7 1700
+#  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
+#  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
+#  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)
+#
+# reset_on_triple_fault：
+# 发生三重故障时重置CPU（强烈建议），而不是继续。
+# 请记住，如果您试图在三次故障后继续，模拟将完全是错误的！
+
+# msrs：
+# 定义用户CPU型号特定寄存器（MSR）规范的路径。
+# 请参阅msrs.def中的示例。
+#
+# ignore_bad_msrs：
+# 忽略Bochs不理解的MSR引用；打印警告消息，而不是生成GP异常。此选项已启用
+# 默认情况下启用，但如果启用了可配置的MSR，则不可用。
+#
+# ips：
+# 每秒模拟指令数
+# IPS用于校准bochs内的许多与时间相关的事件
+# 模拟。例如，更改IPS会影响VGA的频率
+# updates:
+# 密钥开始自动重播之前的持续时间，以及BogoMips和其他基准的测量。
+cpu: ips=15000000
+#=======================================================================
+# ATA0, ATA1, ATA2, ATA3
+# 用于硬盘和光盘的ATA控制器
+#
+# ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
+# 
+# 这些选项最多允许4个ATA通道。必须为每个通道指定两个基本IO地址和IRQ。
+# 
+# ata0和ata1默认启用，其值如下所示
+#
+# 例子:
+#   ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+#   ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
+#   ata2: enabled=1, ioaddr1=0x1e8, ioaddr2=0x3e0, irq=11
+#   ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x360, irq=9
+#=======================================================================
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+
+#=======================================================================
+# ATA[0-3]-MASTER, ATA[0-3]-SLAVE
+#
+# 这定义了所有连接的ATA设备的类型和特征：
+#   type=       连接设备的类型[disk(磁盘)|cdrom(光盘)]
+#   mode=       [flat|concat|dll|sparse|vmware3|vmware4|undoable|growing|volatile|vpc|vbox|vvfat]仅对磁盘有效
+#   path=       软盘文件/目录的路径
+#   cylinders=  只对磁盘有效
+#   heads=      只对磁盘有效
+#   spt=        只对磁盘有效
+#   status=     只对光盘有效 [inserted（插入）|ejected（弹出）]
+#   biosdetect= MBR引导检测的类型 [auto|cmos|none]
+#   translation= bios的翻译类型，仅适用于磁盘 [none|lba|large|rechs|auto]
+#   model=      由识别设备命令返回的字符串
+#   journal=    可选的文件名，用于 undoable、volatile 和 vvfat 磁盘的 redolog。
+#
+# 将其指向硬盘镜像文件、光盘iso文件或物理光盘。
+# 要创建一个硬盘镜像，试着运行bximage，它将帮助你选择大小，然后建议一个与之相适应的线路。
+#
+# 在UNIX中，可以使用原始设备作为Bochs硬盘，但我们不推荐。在Windows中没有简单的方法可以这么做。
+#
+# 在WINDOWS中，光盘应使用盘符+冒号的符号。
+# 根据windows和驱动程序的版本，你可能只能访问系统中的 "第一个" 只读光盘。 
+# 在MacOSX上，使用path="drive"来访问物理驱动器。
+#
+# 路径对于硬盘来说是必须的。如果CHS设置为0/0/0，磁盘自动检测对bximage创建的软盘文件有效（柱面使用head=16和spt=63计算）
+# 对于其他的硬盘镜像和模式，柱面、磁头和spt是必须的。
+# 在所有情况下，软盘镜像文件大小必须正好是C*H*S*512。
+#
+# 默认的值是：
+#   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
+#
+# biosdetect选项目前对bios没有影响。
+#
+# 例子:
+#   ata0-master: type=disk, mode=flat, path=10M.sample, cylinders=306, heads=4, spt=17
+#   ata0-slave:  type=disk, mode=flat, path=20M.sample, cylinders=615, heads=4, spt=17
+#   ata1-master: type=disk, mode=flat, path=30M.sample, cylinders=615, heads=6, spt=17
+#   ata1-slave:  type=disk, mode=flat, path=46M.sample, cylinders=940, heads=6, spt=17
+#   ata2-master: type=disk, mode=flat, path=62M.sample, cylinders=940, heads=8, spt=17
+#   ata2-slave:  type=disk, mode=flat, path=112M.sample, cylinders=900, heads=15, spt=17
+#   ata3-master: type=disk, mode=flat, path=483M.sample, cylinders=1024, heads=15, spt=63
+#   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
+#=======================================================================
+#ata0-master: type=cdrom, mode=flat, path="30M.iso(这里填光盘镜像文件路径)"
+#ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, spt=17
+#ata0-master: type=disk, mode=flat, path="c.img", cylinders=0 # autodetect
+#ata0-slave: type=disk, mode=vvfat, path=/bochs/images/vvfat, journal=vvfat.redolog
+#ata0-slave: type=cdrom, path=D:, status=inserted
+#ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
+#ata0-slave: type=cdrom, path="drive", status=inserted
+#ata0-slave: type=cdrom, path=/dev/rcd0d, status=inserted 
