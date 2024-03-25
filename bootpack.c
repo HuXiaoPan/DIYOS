@@ -14,6 +14,9 @@ void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
+
+const char lut[16] = "0123456789ABCDEF";
 
 #define COL8_000000		0
 #define COL8_FF0000		1
@@ -58,12 +61,12 @@ void _main(void)
 	// int ysize = *binfo_scrny;
 
 	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
-
-	static char font_A[16] =
-	{
-		0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-		0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-	};
+	char s[40] = "scrnx = ";
+	// static char font_A[16] =
+	// {
+	// 	0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+	// 	0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+	// };
 
 	// char *vram = (*binfo).vram;
 	// int xsize = (*binfo).scrnx;
@@ -71,7 +74,30 @@ void _main(void)
 
 	// init_screen(vram, xsize, ysize);
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-	putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
+	// putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
+	// putfont8(binfo->vram, binfo->scrnx,  8, 8, COL8_FFFFFF, font + 'A' * 16);
+	// putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, font + 'B' * 16);
+	// putfont8(binfo->vram, binfo->scrnx, 24, 8, COL8_FFFFFF, font + 'C' * 16);
+	// putfont8(binfo->vram, binfo->scrnx, 40, 8, COL8_FFFFFF, font + '1' * 16);
+	// putfont8(binfo->vram, binfo->scrnx, 48, 8, COL8_FFFFFF, font + '2' * 16);
+	// putfont8(binfo->vram, binfo->scrnx, 56, 8, COL8_FFFFFF, font + '3' * 16);
+	putfonts8_asc(binfo->vram, binfo->scrnx,  8,  8, COL8_FFFFFF, "ABC 123");
+	putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "HupanTest OS.");
+	putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "HupanTest OS.");
+	// s[0] = '0';
+	// s[1] = 'x';
+	// s[2] = lut[(((unsigned short)binfo->scrnx) >> 12) & 15];
+	// s[3] = lut[(((unsigned short)binfo->scrnx) >> 8) & 15];
+	// s[4] = lut[(((unsigned short)binfo->scrnx) >> 4) & 15];
+	// s[5] = lut[((unsigned short)binfo->scrnx) & 15];
+	unsigned short tmp = binfo->scrnx;
+	s[8] = lut[tmp / 100];
+	tmp %= 100;
+	s[9] = lut[tmp / 10];
+	tmp %= 10;
+	s[10] = lut[tmp];
+	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
+
 
 	for (;;)
 	{
@@ -168,6 +194,16 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 		if ((d & 0x04) != 0) { p[5] = c; }
 		if ((d & 0x02) != 0) { p[6] = c; }
 		if ((d & 0x01) != 0) { p[7] = c; }
+	}
+	return;
+}
+
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+{
+	extern char font[4096];
+	for (; *s != 0x00; s++) {
+		putfont8(vram, xsize, x, y, c, font + *s * 16);
+		x += 8;
 	}
 	return;
 }

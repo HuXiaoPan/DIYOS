@@ -40,11 +40,11 @@ int main(int argc, char *argv[])
 
     std::string line;
     int i = 0;
+    out << "char font[4096] = {";
     while (std::getline(in, line))
     {
         if(line.front() == '.' || line.front() == '*')
         {
-            if(!i) out << "\"";
             uint8_t tmp = 0x00;
             for(int j = 0; j < 8; ++j)
             {
@@ -59,18 +59,16 @@ int main(int argc, char *argv[])
             ss.push_back(lut[tmp >> 4]);
             ss.push_back(lut[tmp & 15]);
             out << ss;
+            out << ", ";
             if(++i == 16)
             {
                 i = 0;
-                out << "\"";
                 out << std::endl;
-            }
-            else
-            {
-                out << ", ";
             }
         }
     }
+    out.seekp(-4, std::ios::end);
+    out << "};";
     in.close();
     out.close();
     return 0;

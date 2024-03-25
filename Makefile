@@ -8,6 +8,7 @@ COPY     = copy
 DEL      = del
 
 default :
+	$(MAKE) -C Tools
 	$(MAKE) img
 
 img : hptOS.img
@@ -20,11 +21,11 @@ hptOS.sys: asmhead.bin kernel.bin
 
 kernel.bin: kernel.tmp
 	if not exist temp md temp
-	objcopy -O binary -j .data -j .text $(TEMPPATH)kernel.tmp $(TEMPPATH)kernel.bin
+	objcopy -O binary -j .data -j .text  -j .bss -j .rdata $(TEMPPATH)kernel.tmp $(TEMPPATH)kernel.bin
 
-kernel.tmp: bootEntry.obj bootpack.obj asmfunc.obj
+kernel.tmp: bootEntry.obj bootpack.obj asmfunc.obj Font.obj
 	if not exist temp md temp
-	ld -m i386pe -e _entry -T NUL -Ttext=0x280000 -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootEntry.obj $(TEMPPATH)bootpack.obj $(TEMPPATH)asmfunc.obj
+	ld -m i386pe -e _entry -T NUL -Ttext=0x280000 -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootEntry.obj $(TEMPPATH)bootpack.obj $(TEMPPATH)Font.obj $(TEMPPATH)asmfunc.obj
 
 asmhead.bin: asmhead.asm
 	if not exist temp md temp
@@ -37,6 +38,10 @@ bootEntry.obj: bootEntry.asm
 bootpack.obj: bootpack.c
 	if not exist temp md temp
 	$(GCC) -c -fno-builtin -ffreestanding -nostdlib -m32 bootpack.c -o $(TEMPPATH)bootpack.obj
+
+Font.obj: Font.c
+	if not exist temp md temp
+	$(GCC) -c -fno-builtin -ffreestanding -nostdlib -m32 Font.c -o $(TEMPPATH)Font.obj
 
 asmfunc.obj: asmfunc.asm
 	if not exist temp md temp
@@ -59,6 +64,7 @@ hptOS.img : ipl.bin hptOS.sys
 		imgout:hptOS.img
 
 clean :
+	$(MAKE) -C Tools clean
 	if exist temp rd /q /s temp
 	-$(DEL) *.bin
 	-$(DEL) *.lst
@@ -66,3 +72,4 @@ clean :
 	-$(DEL) *.img
 	-$(DEL) *.tmp
 	-$(DEL) *.obj
+	-$(DEL) Font.c
