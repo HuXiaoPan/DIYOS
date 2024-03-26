@@ -1,4 +1,4 @@
-; haribote-os boot asm
+; hpt-os boot asm
 ; TAB=4
 
 BOTPAK	EQU		0x00280000		; bootpack�̃��[�h��

@@ -15,6 +15,9 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 void init_screen(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
+void init_mouse_cursor8(char *mouse, char bc);
+void putblock8_8(char *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, char *buf, int bxsize);
 
 const char lut[16] = "0123456789ABCDEF";
 
@@ -42,6 +45,35 @@ struct BOOTINFO
 	char *vram;
 };
 
+struct SEGMENT_DESCRIPTOR {
+	short limit_low, base_low;
+	char base_mid, access_right;
+	char limit_high, base_high;
+};
+
+struct GATE_DESCRIPTOR {
+	short offset_low, selector;
+	char dw_count, access_right;
+	short offset_high;
+};
+
+void init_gdtidt(void);
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+void load_gdtr(int limit, int addr);
+void load_idtr(int limit, int addr);
+
+typedef struct
+{
+	int size;
+	char *data;
+} string;
+
+string make_string(char *data, int size);
+int int2char(char *data, int size, int tar);
+int char_pushback(string *src, string *tar);
+int char_strlen(string *src);
+
 void _main(void)
 {
 
@@ -49,7 +81,7 @@ void _main(void)
 	// short *binfo_scrny = (short *) 0x0ff6;;
 	// int *binfo_vram= (int *) 0x0ff8;
 	// char *p = (char *) 0xa0000;
-
+	init_gdtidt();
 	init_palette();
 	
 	// boxfill8(p, 320, COL8_FF0000,  20,  20, 120, 120);
@@ -61,7 +93,9 @@ void _main(void)
 	// int ysize = *binfo_scrny;
 
 	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
-	char s[40] = "scrnx = ";
+	// char temp[40] = "scrnx = ";
+	char temp[40];
+	string s = make_string(temp, 40);
 	// static char font_A[16] =
 	// {
 	// 	0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
@@ -74,6 +108,11 @@ void _main(void)
 
 	// init_screen(vram, xsize, ysize);
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+	int mx = (binfo->scrnx - 16) / 2; /* ��ʒ����ɂȂ�悤�ɍ��W�v�Z */
+	int my = (binfo->scrny - 28 - 16) / 2;
+	char mcursor[256];
+	init_mouse_cursor8(mcursor, COL8_008484);
+	putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
 	// putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
 	// putfont8(binfo->vram, binfo->scrnx,  8, 8, COL8_FFFFFF, font + 'A' * 16);
 	// putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, font + 'B' * 16);
@@ -81,22 +120,28 @@ void _main(void)
 	// putfont8(binfo->vram, binfo->scrnx, 40, 8, COL8_FFFFFF, font + '1' * 16);
 	// putfont8(binfo->vram, binfo->scrnx, 48, 8, COL8_FFFFFF, font + '2' * 16);
 	// putfont8(binfo->vram, binfo->scrnx, 56, 8, COL8_FFFFFF, font + '3' * 16);
-	putfonts8_asc(binfo->vram, binfo->scrnx,  8,  8, COL8_FFFFFF, "ABC 123");
-	putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "HupanTest OS.");
-	putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "HupanTest OS.");
-	// s[0] = '0';
-	// s[1] = 'x';
-	// s[2] = lut[(((unsigned short)binfo->scrnx) >> 12) & 15];
-	// s[3] = lut[(((unsigned short)binfo->scrnx) >> 8) & 15];
-	// s[4] = lut[(((unsigned short)binfo->scrnx) >> 4) & 15];
-	// s[5] = lut[((unsigned short)binfo->scrnx) & 15];
-	unsigned short tmp = binfo->scrnx;
-	s[8] = lut[tmp / 100];
-	tmp %= 100;
-	s[9] = lut[tmp / 10];
-	tmp %= 10;
-	s[10] = lut[tmp];
-	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
+	// putfonts8_asc(binfo->vram, binfo->scrnx,  8,  8, COL8_FFFFFF, "ABC 123");
+	// putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "HupanTest OS.");
+	// putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "HupanTest OS.");
+	
+	char c1[5] = "(";
+	char c2[5] = "";
+	char c3[5] = ", ";
+	char c4[5] = "";
+	char c5[5] = ")";
+	string str1 = make_string(c1, 5);
+	string str2 = make_string(c2, 5);
+	string str3 = make_string(c3, 5);
+	string str4 = make_string(c4, 5);
+	string str5 = make_string(c5, 5);
+	int2char(c2, 3, mx);
+	int2char(c4, 3, my);
+	char_pushback(&s, &str1);
+	char_pushback(&s, &str2);
+	char_pushback(&s, &str3);
+	char_pushback(&s, &str4);
+	char_pushback(&s, &str5);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s.data);
 
 
 	for (;;)
@@ -206,4 +251,146 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 		x += 8;
 	}
 	return;
+}
+void init_mouse_cursor8(char *mouse, char bc)
+/* 鼠标指针点阵 */
+{
+	static char cursor[16][16] = {
+		"**************..",
+		"*OOOOOOOOOOO*...",
+		"*OOOOOOOOOO*....",
+		"*OOOOOOOOO*.....",
+		"*OOOOOOOO*......",
+		"*OOOOOOO*.......",
+		"*OOOOOOO*.......",
+		"*OOOOOOOO*......",
+		"*OOOO**OOO*.....",
+		"*OOO*..*OOO*....",
+		"*OO*....*OOO*...",
+		"*O*......*OOO*..",
+		"**........*OOO*.",
+		"*..........*OOO*",
+		"............*OO*",
+		".............***"
+	};
+	int x, y;
+
+	for (y = 0; y < 16; y++) {
+		for (x = 0; x < 16; x++) {
+			if (cursor[y][x] == '*') {
+				mouse[y * 16 + x] = COL8_000000;
+			}
+			if (cursor[y][x] == 'O') {
+				mouse[y * 16 + x] = COL8_FFFFFF;
+			}
+			if (cursor[y][x] == '.') {
+				mouse[y * 16 + x] = bc;
+			}
+		}
+	}
+	return;
+}
+
+void putblock8_8(char *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, char *buf, int bxsize)
+{
+	int x, y;
+	for (y = 0; y < pysize; y++) {
+		for (x = 0; x < pxsize; x++) {
+			vram[(py0 + y) * vxsize + (px0 + x)] = buf[y * bxsize + x];
+		}
+	}
+	return;
+}
+
+void init_gdtidt(void)
+{
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) 0x00270000;
+	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) 0x0026f800;
+	int i;
+
+	/* GDT初始化 */
+	for (i = 0; i < 8192; i++) {
+		set_segmdesc(gdt + i, 0, 0, 0);
+	}
+	set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, 0x4092);
+	set_segmdesc(gdt + 2, 0x0007ffff, 0x00280000, 0x409a);
+	load_gdtr(0xffff, 0x00270000);
+
+	/* IDT初始化 */
+	for (i = 0; i < 256; i++) {
+		set_gatedesc(idt + i, 0, 0, 0);
+	}
+	load_idtr(0x7ff, 0x0026f800);
+
+	return;
+}
+
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar)
+{
+	if (limit > 0xfffff) {
+		ar |= 0x8000; /* G_bit = 1 */
+		limit /= 0x1000;
+	}
+	sd->limit_low    = limit & 0xffff;
+	sd->base_low     = base & 0xffff;
+	sd->base_mid     = (base >> 16) & 0xff;
+	sd->access_right = ar & 0xff;
+	sd->limit_high   = ((limit >> 16) & 0x0f) | ((ar >> 8) & 0xf0);
+	sd->base_high    = (base >> 24) & 0xff;
+	return;
+}
+
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar)
+{
+	gd->offset_low   = offset & 0xffff;
+	gd->selector     = selector;
+	gd->dw_count     = (ar >> 8) & 0xff;
+	gd->access_right = ar & 0xff;
+	gd->offset_high  = (offset >> 16) & 0xffff;
+	return;
+}
+
+string make_string(char *data, int size)
+{
+	string ret;
+	ret.size = size;
+	ret.data = data;
+	return ret;
+}
+
+int int2char(char *data, int size, int tar)
+{
+	for (int i = size; i > 0; i--)
+	{
+		int base = 1;
+		for (int j = 0; j < i - 1; j++)
+		{
+			base *= 10;
+		}
+		data[size - i] = lut[tar / base];
+		tar %= base;
+	}
+	return 0;
+}
+
+int char_pushback(string *src, string *tar)
+{
+	int str_size = char_strlen(src);
+	int tar_size = char_strlen(tar);
+
+	for (int i = str_size; (i < src->size) && (i - str_size < tar_size); i++)
+	{
+		src->data[i] = tar->data[i - str_size];
+	}
+	return 0;
+}
+
+int char_strlen(string *src)
+{
+	for (int i = 0; i <= src->size; i++)
+	{
+		if(!src->data[i]) return i;
+	}
+	return src->size;
 }
