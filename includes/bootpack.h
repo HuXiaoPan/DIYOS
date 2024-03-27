@@ -4,6 +4,7 @@
 #include "dsctbl.h"
 #include "graphic.h"
 #include "string.h"
+#include "int.h"
 
 /* asmhead.nas */
 struct BOOTINFO { /* 0x0ff0-0x0fff */
