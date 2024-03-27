@@ -1,3 +1,5 @@
+SRC		 = ./src/
+INCLUDES = ./includes/
 TOOLPATH = ./Tools/
 TEMPPATH = ./temp/
 MAKE     = make
@@ -23,9 +25,9 @@ kernel.bin: kernel.tmp
 	if not exist temp md temp
 	objcopy -O binary -j .data -j .text  -j .bss -j .rdata $(TEMPPATH)kernel.tmp $(TEMPPATH)kernel.bin
 
-kernel.tmp: bootEntry.obj bootpack.obj asmfunc.obj Font.obj
+kernel.tmp: bootEntry.obj bootpack.obj graphic.obj dsctbl.obj string.obj asmfunc.obj Font.obj
 	if not exist temp md temp
-	ld -m i386pe -e _entry -T NUL -Ttext=0x280000 -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootEntry.obj $(TEMPPATH)bootpack.obj $(TEMPPATH)Font.obj $(TEMPPATH)asmfunc.obj
+	ld -m i386pe -e _entry -T NUL -Ttext=0x280000 -o $(TEMPPATH)kernel.tmp $(TEMPPATH)bootEntry.obj $(TEMPPATH)bootpack.obj $(TEMPPATH)graphic.obj $(TEMPPATH)dsctbl.obj $(TEMPPATH)string.obj $(TEMPPATH)Font.obj $(TEMPPATH)asmfunc.obj
 
 asmhead.bin: asmhead.asm
 	if not exist temp md temp
@@ -35,13 +37,9 @@ bootEntry.obj: bootEntry.asm
 	if not exist temp md temp
 	$(NASM) -f win32 bootEntry.asm -o $(TEMPPATH)bootEntry.obj -l $(TEMPPATH)bootEntry.lst
 
-bootpack.obj: bootpack.c
+%.obj: $(SRC)%.c
 	if not exist temp md temp
-	$(GCC) -c -fno-builtin -ffreestanding -nostdlib -m32 bootpack.c -o $(TEMPPATH)bootpack.obj
-
-Font.obj: Font.c
-	if not exist temp md temp
-	$(GCC) -c -fno-builtin -ffreestanding -nostdlib -m32 Font.c -o $(TEMPPATH)Font.obj
+	$(GCC) -c -fno-builtin -ffreestanding -nostdlib -m32 -I$(INCLUDES) $(SRC)$*.c -o $(TEMPPATH)$*.obj
 
 asmfunc.obj: asmfunc.asm
 	if not exist temp md temp
@@ -72,4 +70,3 @@ clean :
 	-$(DEL) *.img
 	-$(DEL) *.tmp
 	-$(DEL) *.obj
-	-$(DEL) Font.c
