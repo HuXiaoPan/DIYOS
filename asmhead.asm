@@ -1,7 +1,7 @@
 ; hpt-os boot asm
 ; TAB=4
 
-BOTPAK	EQU		0x00280000		; bootpack�̃��[�h��
+BOTPAK	EQU		0x00280000		; bootpack位置
 DSKCAC	EQU		0x00100000		; �f�B�X�N�L���b�V���̏ꏊ
 DSKCAC0	EQU		0x00008000		; �f�B�X�N�L���b�V���̏ꏊ�i���A�����[�h�j
 

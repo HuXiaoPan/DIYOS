@@ -1,11 +1,16 @@
 #include "bootpack.h"
+#include "dsctbl.h"
+#include "graphic.h"
+#include "string.h"
+#include "int.h"
+#include "nasfunc.h"
 
 void _main(void)
 {
-
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	init_gdtidt();
 	init_pic();
+	io_sti(); /* IDT/PIC�̏��������I������̂�CPU�̊��荞�݋֎~������ */
 
 	init_palette();
 	char temp[40];
@@ -36,6 +41,8 @@ void _main(void)
 	char_pushback(&s, &str5);
 	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s.data);
 
+	io_out8(PIC0_IMR, 0xf9); /* PIC1�ƃL�[�{�[�h������(11111001) */
+	io_out8(PIC1_IMR, 0xef); /* �}�E�X������(11101111) */
 
 	for (;;)
 	{

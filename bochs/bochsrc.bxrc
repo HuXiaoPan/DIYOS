@@ -24,7 +24,7 @@ boot: floppy
 log: bochsout.txt
 
 # 不使用鼠标（使用则设为1，尽量不使用）
-mouse: enabled=0
+mouse: enabled=1
 
 # 这定义了Bochs内部与cpu相关的参数：
 #
