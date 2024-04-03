@@ -4,6 +4,9 @@
 #include "string.h"
 #include "int.h"
 #include "nasfunc.h"
+#include "fifo.h"
+
+extern struct FIFO8 keyfifo;
 
 void _main(void)
 {
@@ -11,6 +14,11 @@ void _main(void)
 	init_gdtidt();
 	init_pic();
 	io_sti(); /* IDT/PIC�̏��������I������̂�CPU�̊��荞�݋֎~������ */
+
+	char keybuf[32];
+	fifo8_init(&keyfifo, 32, keybuf);
+	io_out8(PIC0_IMR, 0xf9); /* PIC1�ƃL�[�{�[�h������(11111001) */
+	io_out8(PIC1_IMR, 0xef); /* �}�E�X������(11101111) */
 
 	init_palette();
 	char temp[40];
@@ -41,11 +49,21 @@ void _main(void)
 	char_pushback(&s, &str5);
 	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s.data);
 
-	io_out8(PIC0_IMR, 0xf9); /* PIC1�ƃL�[�{�[�h������(11111001) */
-	io_out8(PIC1_IMR, 0xef); /* �}�E�X������(11101111) */
-
 	for (;;)
 	{
-		io_hlt();
+		io_cli();
+		if (fifo8_status(&keyfifo) == 0)
+		{
+			io_stihlt();
+		}
+		else
+		{
+			unsigned char data = fifo8_get(&keyfifo);
+			io_sti();
+			unsigned char s[4]= "";
+			getHex((short *)s, data);
+			boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+		}
 	}
 }

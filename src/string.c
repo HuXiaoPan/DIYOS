@@ -25,6 +25,16 @@ int int2char(char *data, int size, int tar)
 	return 0;
 }
 
+int getHex(short *data, unsigned char tar)
+{
+	(*data) = 0;
+	char h = lut[(tar >> 4) & 0xF];
+	(*data) |= (short)h;
+	char l = lut[tar & 0xF];
+	(*data) |= (short)l << 8;
+	return 0;
+}
+
 int char_pushback(string *src, string *tar)
 {
 	int str_size = char_strlen(src);

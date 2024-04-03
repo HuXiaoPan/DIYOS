@@ -1,6 +1,12 @@
 #ifndef INT_H
 #define INT_H
 
+struct KEYBUF
+{
+	unsigned char data[32];
+	int next_r, next_w, len;
+};
+
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler2c(int *esp);

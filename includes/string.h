@@ -11,6 +11,7 @@ typedef struct
 
 string make_string(char *data, int size);
 int int2char(char *data, int size, int tar);
+int getHex(short *data, unsigned char tar);
 int char_pushback(string *src, string *tar);
 int char_strlen(string *src);
 

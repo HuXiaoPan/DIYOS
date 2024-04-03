@@ -16,6 +16,7 @@ OBJS	 = 	$(TEMPPATH)bootEntry.obj \
 			$(TEMPPATH)string.obj \
 			$(TEMPPATH)Font.obj \
 			$(TEMPPATH)int.obj \
+			$(TEMPPATH)fifo.obj \
 			$(TEMPPATH)asmfunc.obj
 
 default :
